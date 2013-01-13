@@ -1148,7 +1148,8 @@ void indent_text(void)
          indent_pse_push(frm, pc);
          frm.pse[frm.pse_tos].indent = pc->column + pc->len();
 
-         if (((pc->type == CT_FPAREN_OPEN) || (pc->type == CT_ANGLE_OPEN)) &&
+         bool indent_func_param =
+            (((pc->type == CT_FPAREN_OPEN) || (pc->type == CT_ANGLE_OPEN)) &&
              ((cpd.settings[UO_indent_func_call_param].b &&
                ((pc->parent_type == CT_FUNC_CALL) ||
                 (pc->parent_type == CT_FUNC_CALL_USER)))
@@ -1167,7 +1168,12 @@ void indent_text(void)
                (pc->parent_type == CT_FUNC_CTOR_VAR))
               ||
               (cpd.settings[UO_indent_func_def_param].b &&
-               (pc->parent_type == CT_FUNC_DEF))))
+               (pc->parent_type == CT_FUNC_DEF))));
+
+         if (indent_func_param ||
+             ((pc->type == CT_FPAREN_OPEN) &&
+              chunk_is_newline(chunk_get_next_nc(pc)) &&
+              !cpd.settings[UO_indent_paren_nl].b))
          {
             /* Skip any continuation indents */
             idx = frm.pse_tos - 1;
@@ -1190,7 +1196,10 @@ void indent_text(void)
             {
                frm.pse[frm.pse_tos].indent += indent_size;
             }
-            frm.pse[frm.pse_tos].indent_tab = frm.pse[frm.pse_tos].indent;
+            if (indent_func_param)
+            {
+               frm.pse[frm.pse_tos].indent_tab = frm.pse[frm.pse_tos].indent;
+            }
          }
 
          else if ((chunk_is_str(pc, "(", 1) && !cpd.settings[UO_indent_paren_nl].b) ||
