@@ -1779,8 +1779,10 @@ static bool one_liner_nl_ok(chunk_t *pc)
          return(false);
       }
 
+      chunk_t *prev = chunk_get_prev(pc);
       if (cpd.settings[UO_nl_assign_leave_one_liners].b &&
-          (pc->parent_type == CT_ASSIGN))
+         ((pc->parent_type == CT_ASSIGN) ||
+          (prev && (prev->type==CT_RETURN))))
       {
          LOG_FMT(LNL1LINE, "false (assign)\n");
          return(false);
